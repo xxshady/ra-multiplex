@@ -181,9 +181,13 @@ async fn spawn(
     // are allowed to lock it again.
     map: Arc<Mutex<InstanceMap>>,
 ) -> Result<Arc<Instance>> {
+    dbg!(&key.workspace_root);
+
+    let workspace_root = key.workspace_root.replace("/c%3A", "C:");
+
     let mut child = Command::new(&key.server)
         .args(&key.args)
-        .current_dir(&key.workspace_root)
+        .current_dir(&workspace_root)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
@@ -191,10 +195,9 @@ async fn spawn(
         .with_context(|| {
             format!(
                 "spawning langauge server: server={:?}, args={:?}, cwd={:?}",
-                key.server, key.args, key.workspace_root,
+                key.server, key.args, workspace_root,
             )
         })?;
-
     let pid = child.id().context("child exited early, couldn't get PID")?;
     tracing::Span::current().record("pid", pid);
 
